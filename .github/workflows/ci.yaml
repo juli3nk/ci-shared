@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  changes:
+    uses: $/.github/workflows/changes.yaml
+
+  checks:
+    needs: changes
+    uses: $/.github/workflows/git-checks.yaml
+    with:
+      refs_base: ${{ needs.changes.outputs.refs_base }}
+      refs_head: ${{ needs.changes.outputs.refs_head }}
+
+  lint:
+    needs: [changes, checks]
+    uses: $/.github/workflows/lint-generic.yaml
+    with:
+      files_md: ${{ needs.changes.outputs.files_md }}
+      files_yaml: ${{ needs.changes.outputs.files_yaml }}
+      files_json: ${{ needs.changes.outputs.files_json }}

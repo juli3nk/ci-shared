@@ -1,0 +1,86 @@
+name: lint-generic
+
+on:
+  workflow_call:
+    inputs:
+      check_md:
+        description: 'Enable markdown file verification'
+        required: false
+        type: boolean
+        default: true
+      check_yaml:
+        description: 'Enable YAML file verification'
+        required: false
+        type: boolean
+        default: true
+      check_json:
+        description: 'Enable JSON file verification'
+        required: false
+        type: boolean
+        default: true
+      files_md:
+        description: 'JSON-encoded list of Markdown files changed'
+        required: false
+        type: string
+        default: ""
+      files_yaml:
+        description: 'JSON-encoded list of YAML files changed'
+        required: false
+        type: string
+        default: ""
+      files_json:
+        description: 'JSON-encoded list of JSON files changed'
+        required: false
+        type: string
+        default: ""
+
+env:
+  DAGGER_NO_NAG: "1"
+
+jobs:
+  generic:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Dagger
+        uses: dagger/dagger-for-github@v8.4.1
+
+      - name: Lint Markdown
+        if: inputs.check_md
+        run: |
+          if [ "${{ inputs.files_md }}" != "" ]; then
+            dagger call markdown lint --paths-json='${{ inputs.files_md }}'
+          else
+            dagger call markdown lint
+          fi
+
+      # - name: Lint YAML
+      #   if: inputs.check_yaml
+      #   run: |
+      #     if [ "${{ inputs.files_yaml }}" != "" ]; then
+      #       dagger call yaml lint --paths-json='${{ inputs.files_yaml }}'
+      #     else
+      #       dagger call yaml lint
+      #     fi
+
+      # - name: Check YAML formatting
+      #   if: inputs.check_yaml
+      #   run: |
+      #     if [ "${{ inputs.files_yaml }}" != "" ]; then
+      #       dagger call yaml fmt --paths-json='${{ inputs.files_yaml }}'
+      #     else
+      #       dagger call yaml fmt
+      #     fi
+
+      - name: Lint JSON
+        if: inputs.check_json
+        run: |
+          if [ "${{ inputs.files_json }}" != "" ]; then
+            dagger call jsonfile lint --paths-json='${{ inputs.files_json }}'
+          else
+            dagger call jsonfile lint
+          fi
