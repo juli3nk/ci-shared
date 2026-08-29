@@ -1,0 +1,56 @@
+name: release
+
+on:
+  workflow_call:
+    outputs:
+      released:
+        value: ${{ jobs.release.outputs.released }}
+      tag:
+        value: ${{ jobs.release.outputs.tag }}
+
+env:
+  DAGGER_NO_NAG: "1"
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release_status.outputs.tag }}
+      released: ${{ steps.release_status.outputs.released }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Get current tag
+        id: current_tag
+        run: echo "tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Semantic release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: dagger/dagger-for-github@v8.4.1
+        with:
+          call: semantic-release run --github-action=true --repo-token-env=GITHUB_TOKEN --repo-token=env:GITHUB_TOKEN --ci=true --dry-run=false
+
+      - name: Checkout latest changes
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set Output Tag and Check if released
+        id: release_status
+        run: |
+          NEW_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo '')
+          echo "tag=${NEW_TAG}" | tee -a "$GITHUB_OUTPUT"
+
+          # Comparing old and new tag
+          if [[ "$NEW_TAG" != "" && "$NEW_TAG" != "${{ steps.current_tag.outputs.tag }}" ]]; then
+            echo "released=true" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "released=false" | tee -a "$GITHUB_OUTPUT"
+          fi

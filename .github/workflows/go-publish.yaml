@@ -1,0 +1,36 @@
+name: go-publish
+
+on:
+  workflow_call:
+    inputs:
+      released:
+        description: 'Go version to use'
+        required: true
+        type: string
+      tag:
+        description: 'Go version to use'
+        required: true
+        type: string
+
+env:
+  DAGGER_NO_NAG: "1"
+
+jobs:
+  publish:
+    permissions:
+      contents: read
+      packages: write
+    if: inputs.released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Goreleaser Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: dagger/dagger-for-github@v8.4.1
+        with:
+          call: goreleaser release --token-env GITHUB_TOKEN --token env:GITHUB_TOKEN

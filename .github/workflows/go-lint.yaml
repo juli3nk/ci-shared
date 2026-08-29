@@ -1,0 +1,48 @@
+name: go-lint
+
+on:
+  workflow_call:
+    inputs:
+      go_version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: "1.26.7"
+      files_go:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: ""
+
+env:
+  DAGGER_NO_NAG: "1"
+
+jobs:
+  go:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Dagger
+        uses: dagger/dagger-for-github@v8.4.1
+
+      - name: Lint Go
+        if: ${{ fromJSON(inputs.files_go)[0] != null }}
+        run: |
+          if [ "${{ inputs.files_go }}" != "" ]; then
+            dagger call go --version=${{ inputs.go_version }} lint --paths-json='${{ inputs.files_go }}'
+          else
+            dagger call go --version=${{ inputs.go_version }} lint
+          fi
+
+      - name: Check Go formatting
+        if: ${{ fromJSON(inputs.files_go)[0] != null }}
+        run: |
+          if [ "${{ inputs.files_go }}" != "" ]; then
+            dagger call go --version=${{ inputs.go_version }} fmt --paths-json='${{ inputs.files_go }}'
+          else
+            dagger call go --version=${{ inputs.go_version }} fmt
+          fi

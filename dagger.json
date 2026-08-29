@@ -1,0 +1,31 @@
+{
+  "name": "ci-shared",
+  "engineVersion": "v0.21.8",
+  "toolchains": [
+    {
+      "name": "commitlint",
+      "source": "github.com/juli3nk/daggerverse/commitlint@main",
+      "pin": "c5bbd590c90cf2a739183977e8be534b770908ca"
+    },
+    {
+      "name": "gitleaks",
+      "source": "github.com/juli3nk/daggerverse/gitleaks@main",
+      "pin": "c5bbd590c90cf2a739183977e8be534b770908ca"
+    },
+    {
+      "name": "gitlocal",
+      "source": "github.com/juli3nk/daggerverse/gitlocal@main",
+      "pin": "c5bbd590c90cf2a739183977e8be534b770908ca"
+    },
+    {
+      "name": "jsonfile",
+      "source": "github.com/juli3nk/daggerverse/jsonfile@main",
+      "pin": "c5bbd590c90cf2a739183977e8be534b770908ca"
+    },
+    {
+      "name": "markdown",
+      "source": "github.com/juli3nk/daggerverse/markdown@main",
+      "pin": "c5bbd590c90cf2a739183977e8be534b770908ca"
+    }
+  ]
+}

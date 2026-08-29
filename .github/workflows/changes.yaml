@@ -1,0 +1,62 @@
+name: changes
+
+on:
+  workflow_call:
+    inputs:
+      lang_ext:
+        description: "L'extension de fichier spécifique au langage du projet (ex: go, ts, py)"
+        required: false
+        type: string
+        default: ""
+    outputs:
+      refs_base:
+        value: ${{ jobs.changes.outputs.refs_base }}
+      refs_head:
+        value: ${{ jobs.changes.outputs.refs_head }}
+      files_all:
+        value: ${{ jobs.changes.outputs.files_all }}
+      files_md:
+        value: ${{ jobs.changes.outputs.files_md }}
+      files_yaml:
+        value: ${{ jobs.changes.outputs.files_yaml }}
+      files_json:
+        value: ${{ jobs.changes.outputs.files_json }}
+      files_lang:
+        value: ${{ jobs.changes.outputs.files_lang }}
+
+env:
+  DAGGER_NO_NAG: "1"
+
+jobs:
+  changes:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      refs_base: ${{ steps.git-change-refs.outputs.base_ref }}
+      refs_head: ${{ steps.git-change-refs.outputs.head_ref }}
+      files_all: ${{ steps.files.outputs.all }}
+      files_md: ${{ steps.files.outputs.md }}
+      files_yaml: ${{ steps.files.outputs.yaml }}
+      files_json: ${{ steps.files.outputs.json }}
+      files_lang: ${{ steps.files.outputs.lang }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve git range
+        id: git-change-refs
+        uses: juli3nk/ci-context@main
+
+      - name: Detect changed files
+        id: git-changed-files
+        uses: dagger/dagger-for-github@v8.4.1
+        with:
+          call: gitlocal changed-files --base-ref=${{ steps.git-change-refs.outputs.base_ref }} --head-ref="${{ steps.git-change-refs.outputs.head_ref }}" --ext="md" --ext="yaml:yaml" --ext="yaml:yml" --ext="json" ${{ inputs.lang_ext != '' && format('--ext="lang:{0}"', inputs.lang_ext) || '' }} github-output
+
+      - name: Export changed files outputs
+        id: files
+        run: |
+          echo '${{ steps.git-changed-files.outputs.output }}' >> "$GITHUB_OUTPUT"

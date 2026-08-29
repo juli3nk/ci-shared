@@ -1,0 +1,52 @@
+name: lint-generic
+
+on:
+  workflow_call:
+    inputs:
+      files_md:
+        description: 'Go version to use'
+        required: false
+        type: string
+      files_yaml:
+        description: 'Go version to use'
+        required: false
+        type: string
+      files_json:
+        description: 'Go version to use'
+        required: false
+        type: string
+
+env:
+  DAGGER_NO_NAG: "1"
+
+jobs:
+  generic:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Dagger
+        uses: dagger/dagger-for-github@v8.4.1
+
+      - name: Lint Markdown
+        if: ${{ fromJSON(inputs.files_md)[0] != null }}
+        run: |
+          dagger call markdown lint --paths-json='${{ inputs.files_md }}'
+
+      # - name: Lint YAML
+      #   if: ${{ fromJSON(inputs.files_yaml)[0] != null }}
+      #   run: |
+      #     dagger call yaml --version=${{ inputs.go_version }} lint --paths-json='${{ inputs.files_yaml }}'
+
+      # - name: Check YAML formatting
+      #   if: ${{ fromJSON(inputs.files_yaml)[0] != null }}
+      #   run: |
+      #     dagger call yaml --version=${{ inputs.go_version }} fmt --paths-json='${{ inputs.files_yaml }}'
+
+      - name: Lint JSON
+        if: ${{ fromJSON(inputs.files_json)[0] != null }}
+        run: |
+          dagger call jsonfile lint --paths-json='${{ inputs.files_json }}'
