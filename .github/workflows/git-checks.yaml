@@ -1,0 +1,38 @@
+name: git-checks
+
+on:
+  workflow_call:
+    inputs:
+      refs_base:
+        description: "L'extension de fichier spécifique au langage du projet (ex: go, ts, py)"
+        required: true
+        type: string
+      refs_head:
+        description: "L'extension de fichier spécifique au langage du projet (ex: go, ts, py)"
+        required: true
+        type: string
+
+env:
+  DAGGER_NO_NAG: "1"
+
+jobs:
+  git:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Lint commits
+        uses: dagger/dagger-for-github@v8.4.1
+        with:
+          call: commitlint lint --from ${{ inputs.refs_base }} --to ${{ inputs.refs_head }} --default-config
+
+      - name: Scan for secrets
+        uses: dagger/dagger-for-github@v8.4.1
+        with:
+          verb: check
+          args: gitleaks:detect
